@@ -44,7 +44,7 @@ async def scheduled_message():
 
 # Main function
 async def main():
-    await client.start(phone='+8829960217')
+    await client.start(phone='+918829960217')
     print("Bot is running...")
 
     # Start the scheduled message task
