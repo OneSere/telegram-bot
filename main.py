@@ -2,7 +2,6 @@ from telethon import TelegramClient, events
 import os
 from flask import Flask
 import asyncio
-import time
 
 # Your Telegram API credentials
 api_id = 25843334  # Your API ID here
