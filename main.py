@@ -1,51 +1,46 @@
 import os
+import asyncio
 from telethon import TelegramClient, events
 from flask import Flask
-import asyncio
 
-# Telegram API credentials
-api_id = 25843334  # Your API ID here
-api_hash = 'e752bb9ebc151b7e36741d7ead8e4fd0'  # Your API Hash here
-session_name = 'anon'  # Name of the session file (anon.session will be created)
+# Define your API credentials here
+api_id = 25843334
+api_hash = 'e752bb9ebc151b7e36741d7ead8e4fd0'
+session_name = 'anon'  # Your session file name
 
+# Initialize the Telegram client
 client = TelegramClient(session_name, api_id, api_hash)
 
-# Flask app (necessary for platforms like Render/Vercel)
+# Flask app initialization
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Bot is running!"
 
-# Away message handler
-away_message = "I'm currently away. I will respond as soon as I'm available."
-
+# Command handler for "CODE1"
 @client.on(events.NewMessage(pattern='CODE1'))
-async def handler(event):
-    """ Handle the 'CODE1' command. """
+async def handle_code1(event):
     await event.respond('Hello Code 1 responding')
-    print("Received CODE1 and responded")
+    print("CODE1 received, responded successfully!")
 
-@client.on(events.NewMessage(pattern='/away'))
-async def away_handler(event):
-    """ Handle the '/away' command. """
-    await event.respond(away_message)
-    print("Responded with away message")
-
-# Start Telethon client and Flask server
-async def start_bot():
+# Start the Telethon client
+async def start_telethon():
     await client.start()
-    print("✅ Logged in successfully. Session file 'anon.session' created!")
+    print("Telegram client started and ready to respond!")
     await client.run_until_disconnected()
 
-# Start Flask server (binding to open port)
+# Start the Flask app (web server)
 def start_flask():
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    # Use the environment variable PORT if available, else fallback to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)  # Set your desired port, 5000 is default for Flask
 
-if __name__ == '__main__':
+# Main entry point
+if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-
-    # Run both Flask and Telethon in parallel
-    loop.create_task(start_bot())  # Telethon bot
-    start_flask()  # Flask web server
+    
+    # Run both Flask and Telethon client in parallel
+    loop.create_task(start_telethon())  # Start Telethon client
+    start_flask()  # Start Flask web server
 
