@@ -1,57 +1,54 @@
-import logging
-import asyncio
 from telethon import TelegramClient, events
+import asyncio
+import schedule
+import time
+import threading
 
-# Enable logging for debugging
-logging.basicConfig(level=logging.INFO)
-
-# Your fixed Telegram API credentials
+# === Your Telegram API credentials ===
 api_id = 25843334
 api_hash = 'e752bb9ebc151b7e36741d7ead8e4fd0'
+session_name = 'anon'  # Keep the generated .session file
 
-# Initialize Telethon client
-client = TelegramClient('session_name', api_id, api_hash)
+# === Initialize the Telegram client ===
+client = TelegramClient(session_name, api_id, api_hash)
 
-# Flag to activate away message
-away_message_enabled = True
-away_response_text = "I'm currently away. Will get back to you soon."
-
-# Event handler for new messages
+# === Respond to incoming messages ===
 @client.on(events.NewMessage)
 async def handler(event):
-    message = event.message.text.strip()
-    print(f"New message received: {message}")
+    text = event.raw_text.lower()
+    if "code1" in text:
+        await event.respond("Hello Code 1 responding.")
+    elif "hi" in text:
+        await event.respond("I'm currently away. Will get back to you soon!")
 
-    # Respond to CODE1
-    if message.upper() == "CODE1":
-        await event.reply("Hello Code 1 responding")
-        print("Replied to CODE1")
-
-    # Away message response
-    elif away_message_enabled:
-        await event.reply(away_response_text)
-        print("Sent away message")
-
-# Scheduled message function
-async def scheduled_message():
-    for i in range(5):  # Repeat 5 times
+# === Repeating message to specific user ===
+async def send_repeated_message():
+    user = '@gostaddy'
+    for _ in range(5):
         try:
-            await client.send_message('@gostaddy', 'hii how are you ?')
-            print(f"Sent scheduled message {i+1}/5")
+            await client.send_message(user, 'hi how are you?')
+            await asyncio.sleep(5)
         except Exception as e:
-            print(f"Error sending message: {e}")
-        await asyncio.sleep(5)  # Wait 5 seconds before next send
+            print("Error sending message:", e)
 
-# Main function
+# === Scheduler in separate thread ===
+def run_schedule():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+# === Main entry point ===
 async def main():
-    await client.start(phone='+918829960217')
+    schedule.every(1).seconds.do(lambda: asyncio.ensure_future(send_repeated_message()))
+
+    # Start scheduler in background
+    threading.Thread(target=run_schedule, daemon=True).start()
+
+    # Start the Telegram client
+    await client.start()
     print("Bot is running...")
-
-    # Start the scheduled message task
-    asyncio.create_task(scheduled_message())
-
-    # Keep the client running
     await client.run_until_disconnected()
 
-# Run the client
-client.loop.run_until_complete(main())
+# === Run everything ===
+if __name__ == "__main__":
+    asyncio.run(main())
